@@ -175,6 +175,20 @@ const CostEstimateSent = () => {
         return parent ? parent : <span style={{ color: '#bbb' }}>-</span>;
       },
     },
+    {
+      title: 'Xem chi tiết',
+      dataIndex: 'action',
+      width: 60,
+      align: 'center' as const,
+      render: (_: any, row: any) => (
+        <Button
+          type="text"
+          icon={<i className="fa-light fa-arrow-right-to-line" style={{ fontSize: 18, color: '#1C90BD' }} />}
+          style={{ padding: 0, minWidth: 32 }}
+          onClick={() => { /* TODO: handle detail view */ }}
+        />
+      ),
+    },
   ];
 
   return (
