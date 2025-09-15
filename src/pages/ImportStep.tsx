@@ -50,6 +50,25 @@ const ImportStep: React.FC<ImportStepProps> = ({ title, templateColumns, templat
         if (!json.length) throw new Error('File không hợp lệ hoặc không có dữ liệu!');
         setData(json);
         await set(dbKey, json);
+        // Tổng hợp theo đơn vị và vị trí
+        if (dbKey === 'employees') {
+          const summary: { unit: string; position: string; count: number }[] = [];
+          const map = new Map<string, Map<string, number>>();
+          for (const row of json) {
+            const unit = row.unit || '';
+            const position = row.position || '';
+            if (!unit || !position) continue;
+            if (!map.has(unit)) map.set(unit, new Map());
+            const posMap = map.get(unit)!;
+            posMap.set(position, (posMap.get(position) || 0) + 1);
+          }
+          for (const [unit, posMap] of map.entries()) {
+            for (const [position, count] of posMap.entries()) {
+              summary.push({ unit, position, count });
+            }
+          }
+          await set('employee_position_summary', summary);
+        }
         setSaved(true);
       } catch (err: any) {
         setError(err.message || 'File lỗi!');

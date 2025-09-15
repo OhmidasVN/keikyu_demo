@@ -303,6 +303,34 @@ const Account = () => {
           <AntForm.Item name="username" label="Username" rules={[{ required: true, message: 'Nhập username!' }]}> 
             <Input />
           </AntForm.Item>
+          <AntForm.Item name="password" label="Mật khẩu" rules={[{ required: true, message: 'Nhập mật khẩu!' }]}> 
+            <Input.Password
+              addonAfter={
+                <Button
+                  size="small"
+                  type="default"
+                  style={{ fontSize: 12, padding: '0 8px' }}
+                  onClick={() => {
+                    // Gen pass: 8 ký tự, có hoa, thường, đặc biệt
+                    const lower = 'abcdefghijklmnopqrstuvwxyz';
+                    const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                    const special = '!@#$%^&*()_+-=~';
+                    const all = lower + upper + special;
+                    let pass = '';
+                    pass += lower[Math.floor(Math.random() * lower.length)];
+                    pass += upper[Math.floor(Math.random() * upper.length)];
+                    pass += special[Math.floor(Math.random() * special.length)];
+                    for (let i = 3; i < 8; ++i) pass += all[Math.floor(Math.random() * all.length)];
+                    // Shuffle
+                    pass = pass.split('').sort(() => Math.random() - 0.5).join('');
+                    form.setFieldsValue({ password: pass });
+                  }}
+                >
+                  Gen pass tự động
+                </Button>
+              }
+            />
+          </AntForm.Item>
           <AntForm.Item name="unit" label={<span style={{ fontSize: 13, fontWeight: 500 }}>Đơn vị</span>} rules={[{ required: true, message: 'Chọn đơn vị!' }]} style={{ marginBottom: 16 }}>
             <Dropdown
               open={unitDropdownOpenModal}

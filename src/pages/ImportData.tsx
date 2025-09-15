@@ -17,9 +17,7 @@ const ImportData = () => {
   return (
     <div style={{ background: '#fff', padding: 20, borderRadius: 8, maxWidth: 1100, margin: '0 auto', display: 'flex', minHeight: 500 }}>
       <div style={{ position: 'absolute', right: 40, top: 24, zIndex: 2 }}>
-        <Button type="text" icon={<i className="fa-light fa-arrow-left" />} style={{ color: '#1C90BD', background: '#F5F5F5', fontWeight: 600, fontSize: 16 }} onClick={() => window.history.back()}>
-          Quay lại
-        </Button>
+  
       </div>
       <div style={{ width: 220, marginRight: 32 }}>
         <Steps direction="vertical" current={step} style={{ minHeight: 300 }}>
