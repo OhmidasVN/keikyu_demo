@@ -7,14 +7,13 @@ interface CostEstimateRow {
   employeeType: string;
   currentCount: number;
   months: (number | undefined)[];
-  raiseType?: '%' | '¥';
-  raiseValue?: number;
+  avgSalary: number;
 }
 
 const initialRows: Omit<CostEstimateRow, 'months'>[] = [
-  { key: 1, employeeType: 'Nhân viên chính thức', currentCount: 10, raiseType: '%', raiseValue: undefined },
-  { key: 2, employeeType: 'My star', currentCount: 5, raiseType: '%', raiseValue: undefined },
-  { key: 3, employeeType: 'Phái cử', currentCount: 3, raiseType: '%', raiseValue: undefined },
+  { key: 1, employeeType: 'Nhân viên chính thức', currentCount: 10, avgSalary: 12000000 },
+  { key: 2, employeeType: 'My star', currentCount: 5, avgSalary: 15000000 },
+  { key: 3, employeeType: 'Phái cử', currentCount: 3, avgSalary: 10000000 },
   // ... thêm dòng mẫu nếu cần
 ];
 
@@ -41,10 +40,10 @@ const CostEstimate = () => {
       employeeType: row.employeeType,
       currentCount: row.currentCount,
       months: monthLabels.map(() => undefined),
-      raiseType: row.raiseType ?? '%',
-      raiseValue: row.raiseValue,
+      avgSalary: row.avgSalary,
     }))
   );
+  const [showResult, setShowResult] = useState(false);
 
   // Xác định index các mốc tháng
   const idxSep2026 = monthLabels.findIndex(m => m === '09/2026');
@@ -126,38 +125,9 @@ const CostEstimate = () => {
         <span style={{ display: 'block' }}>{value}</span>
       ),
     },
-    {
-      title: 'Tăng lương',
-      dataIndex: 'raiseType',
-      minWidth: 120,
-      align: 'center' as const,
-      render: (_: any, row: any, rowIdx: number) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <InputNumber
-            min={0}
-            value={row.raiseValue ?? undefined}
-            style={{ width: 60, height: 28, borderRadius: 4, border: '1px solid #d9d9d9', textAlign: 'center' }}
-            onChange={val => {
-              const newData = [...data];
-              newData[rowIdx].raiseValue = val === null ? undefined : val;
-              setData(newData);
-            }}
-          />
-          <select
-            value={row.raiseType || '%'}
-            style={{ width: 40, height: 28, borderRadius: 4, border: '1px solid #d9d9d9', textAlign: 'center' }}
-            onChange={e => {
-              const newData = [...data];
-              newData[rowIdx].raiseType = e.target.value as '%' | '¥';
-              setData(newData);
-            }}
-          >
-            <option value="%">%</option>
-            <option value="¥">¥</option>
-          </select>
-        </div>
-      ),
-    },
+    { title: 'Lương trung bình', dataIndex: 'avgSalary', minWidth: 120, align: 'center' as const, render: (value: number) => (
+      <span>{value.toLocaleString()} đ</span>
+    ) },
     {
       title: 'Số lượng nhân viên',
       children: monthColumns,
@@ -174,6 +144,59 @@ const CostEstimate = () => {
   const totalAll = data.reduce((sum, row) => sum + row.months.reduce((a, b) => a + (b || 0), 0), 0);
   const totalCurrent = data.reduce((sum, row) => sum + (row.currentCount || 0), 0);
 
+  const resultColumns = columns.map(col => {
+    if (col.children) {
+      // Cột tháng và tổng: render label
+      return {
+        ...col,
+        children: col.children.map(child => ({
+          ...child,
+          render: (_: any, row: any, rowIdx: number) => {
+            if (child.dataIndex.startsWith('month_')) {
+              const idx = parseInt(child.dataIndex.replace('month_', ''));
+              return <span>{row.months[idx] ?? ''}</span>;
+            }
+            if (child.dataIndex === 'totalFirst') {
+              const sum = row.months.slice(0, idxSep2026 + 1).reduce((a: number, b: number) => a + (b || 0), 0);
+              return <span style={{ fontWeight: 600 }}>{sum}</span>;
+            }
+            if (child.dataIndex === 'totalLast') {
+              const sum = row.months.slice(idxSep2026 + 1, idxApr2027 + 1).reduce((a: number, b: number) => a + (b || 0), 0);
+              return <span style={{ fontWeight: 600 }}>{sum}</span>;
+            }
+            if (child.dataIndex === 'totalAll') {
+              const sum = row.months.reduce((a: number, b: number) => a + (b || 0), 0);
+              return <span style={{ fontWeight: 600, color: '#1C90BD' }}>{sum}</span>;
+            }
+            return '';
+          }
+        }))
+      };
+    }
+    // Cột tăng lương: render label
+    if (col.dataIndex === 'avgSalary') {
+      return {
+        ...col,
+        render: (value: number) => <span>{value.toLocaleString()} đ</span>
+      };
+    }
+    // Cột số lượng hiện tại: render label
+    if (col.dataIndex === 'currentCount') {
+      return {
+        ...col,
+        render: (value: number) => <span>{value}</span>
+      };
+    }
+    // Cột phân loại nhân viên: render label
+    if (col.dataIndex === 'employeeType') {
+      return {
+        ...col,
+        render: (value: string) => <span>{value}</span>
+      };
+    }
+    return col;
+  });
+
   return (
     <div style={{ background: '#fff', padding: 20, borderRadius: 8 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
@@ -183,6 +206,108 @@ const CostEstimate = () => {
         <Button type="text" icon={<i className="fa-light fa-arrow-left" />} style={{ color: '#1C90BD', background: '#F5F5F5', fontWeight: 600, fontSize: 16 }} onClick={() => window.history.back()}>
           Quay lại
         </Button>
+      </div>
+      {/* Trạng thái kế hoạch */}
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20, gap: 12, flexWrap: 'wrap' }}>
+        <span style={{
+          fontWeight: 700,
+          color: '#1C90BD',
+          fontSize: 15,
+          letterSpacing: 0.2,
+          marginRight: 4,
+          height: 36,
+          lineHeight: '36px',
+          display: 'flex',
+          alignItems: 'center',
+        }}>
+          Trạng thái kế hoạch:
+        </span>
+        {/* Các trạng thái */}
+        <span style={{
+          background: '#e6f4ff',
+          border: '1px solid #1890ff',
+          color: '#1C90BD',
+          borderRadius: 6,
+          padding: '0 20px',
+          minWidth: 120,
+          height: 36,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontWeight: 600,
+          fontSize: 15,
+          boxShadow: '0 1px 4px rgba(28,144,189,0.07)'
+        }}>
+          Bản nháp
+        </span>
+        <span style={{
+          background: '#fffbe6',
+          border: '1px solid #faad14',
+          color: '#faad14',
+          borderRadius: 6,
+          padding: '0 20px',
+          minWidth: 120,
+          height: 36,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontWeight: 600,
+          fontSize: 15,
+          boxShadow: '0 1px 4px rgba(250,173,20,0.07)'
+        }}>
+          Chờ duyệt
+        </span>
+        <span style={{
+          background: '#dcf1e1',
+          border: '1px solid #22c55e',
+          color: '#16a34a',
+          borderRadius: 6,
+          padding: '0 20px',
+          minWidth: 120,
+          height: 36,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontWeight: 600,
+          fontSize: 15,
+          boxShadow: '0 1px 4px rgba(34,197,94,0.07)'
+        }}>
+          Đã duyệt
+        </span>
+        <span style={{
+          background: '#fff1f0',
+          border: '1px solid #ff4d4f',
+          color: '#ff4d4f',
+          borderRadius: 6,
+          padding: '0 20px',
+          minWidth: 120,
+          height: 36,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontWeight: 600,
+          fontSize: 15,
+          boxShadow: '0 1px 4px rgba(255,77,79,0.07)'
+        }}>
+          Từ chối
+        </span>
+        <span style={{
+          background: '#e6f7ff',
+          border: '1px solid #1890ff',
+          color: '#1C90BD',
+          borderRadius: 6,
+          padding: '0 20px',
+          minWidth: 120,
+          height: 36,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontWeight: 600,
+          fontSize: 15,
+          boxShadow: '0 1px 4px rgba(28,144,189,0.07)'
+        }}>
+          Đã gửi
+        </span>
       </div>
       {/* Filter */}
       <div style={{ display: 'flex', gap: 24, alignItems: 'stretch', marginBottom: 16 }}>
@@ -273,6 +398,70 @@ const CostEstimate = () => {
           </Table.Summary.Row>
         )}
       />
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
+        <Button
+          type="primary"
+          style={{ background: '#1C90BD', borderColor: '#1C90BD', fontWeight: 600, fontSize: 14, borderRadius: 12, padding: '0 10px', height: 35, display: 'flex', alignItems: 'center', gap: 10 }}
+          onClick={() => setShowResult(true)}
+        >
+          <i className="fa-light fa-calculator" style={{ fontSize: 18, marginRight: 8 }} />
+          Tính toán chi phí nhân sự
+        </Button>
+      </div>
+      {showResult && (
+        <div style={{ marginTop: 32 }}>
+          {/* Trạng thái kế hoạch */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+
+          </div>
+          <Table
+            columns={resultColumns}
+            dataSource={data}
+            pagination={false}
+            bordered
+            size="small"
+            rowKey="key"
+            scroll={{ x: true }}
+            style={{ marginTop: 0 }}
+            summary={() => (
+              <Table.Summary.Row>
+                <Table.Summary.Cell index={0} />
+                <Table.Summary.Cell index={1} align="center"><b>Tổng</b></Table.Summary.Cell>
+                <Table.Summary.Cell index={2} align="center"><b>{totalCurrent}</b></Table.Summary.Cell>
+                <Table.Summary.Cell index={3} />
+                {monthLabels.map((_, idx) => (
+                  <Table.Summary.Cell key={idx + 4} index={idx + 4} align="center">
+                    <b>{monthTotals[idx]}</b>
+                  </Table.Summary.Cell>
+                ))}
+                {idxSep2026 !== -1 && (
+                  <Table.Summary.Cell align="center"><b>{totalFirst}</b></Table.Summary.Cell>
+                )}
+                {idxApr2027 !== -1 && (
+                  <>
+                    <Table.Summary.Cell align="center"><b>{totalLast}</b></Table.Summary.Cell>
+                    <Table.Summary.Cell align="center"><b>{totalAll}</b></Table.Summary.Cell>
+                  </>
+                )}
+              </Table.Summary.Row>
+            )}
+          />
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginTop: 32 }}>
+            <Button
+              type="default"
+              style={{ fontWeight: 600, fontSize: 15, borderRadius: 8, padding: '0 28px', height: 40, borderColor: '#1C90BD', color: '#1C90BD' }}
+            >
+              Lưu nháp
+            </Button>
+            <Button
+              type="primary"
+              style={{ fontWeight: 600, fontSize: 15, borderRadius: 8, padding: '0 28px', height: 40, background: '#1C90BD', borderColor: '#1C90BD' }}
+            >
+              Lưu & gửi kế hoạch
+            </Button>
+          </div>
+        </div>
+      )}
       <style>{`
         .ant-table-cell:has(input) {
           padding: 2px 2px !important;
