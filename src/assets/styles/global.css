@@ -1,0 +1,37 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap');
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  background-color: #f5f5f5;
+}
+.icon-color {
+  color: #1C90BD !important;
+  font-size: 18px !important;
+}
+.blue-color {
+  color: #007afe !important;
+}
+button, .ant-btn {
+  border-radius: 3px !important;
+}
+input, .ant-input, .ant-input-password, textarea,
+.ant-input-affix-wrapper, .ant-input-affix-wrapper-focused {
+  border-radius: 3px !important;
+}
+
+.ant-table-tbody > tr:nth-child(even) > td {
+  background: #f6f8fa !important;
+}
+.ant-table-tbody > tr:nth-child(odd) > td {
+  background: #fff !important;
+}
+.ant-table-row-expand-icon, .ant-table-row-expand-icon:focus {
+  color: #1890ff !important; /* Đổi #1890ff thành màu bạn muốn */
+  background: #e6f7ff !important; /* Nếu muốn có nền khác */
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+.ant-table-row-expand-icon:hover {
+  background: #bae7ff !important;
+}
