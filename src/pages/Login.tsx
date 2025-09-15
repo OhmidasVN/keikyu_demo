@@ -2,6 +2,7 @@ import { Button, Card, Form, Input, Divider, Checkbox } from "antd";
 import AuthLayout from "../layouts/AuthLayout";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import logo from '../assets/images/logo.svg';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ const Login = () => {
         bodyStyle={{ padding: 32, position: 'relative' }}
         title={
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <img src="/src/assets/images/logo.svg" alt="Logo" style={{ height: 35, marginTop: 30, marginBottom: 8 }} />
+            <img src={logo} alt="Logo" style={{ height: 35, marginTop: 30, marginBottom: 8 }} />
             <span style={{ fontSize: 20, fontWeight:600, alignSelf: 'flex-start' ,marginTop: 15 , marginBottom: 15}}>Đăng nhập</span>
           </div>
         }

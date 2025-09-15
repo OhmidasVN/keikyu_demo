@@ -1,5 +1,6 @@
 import { Layout, Menu, Avatar, Dropdown } from "antd";
 import { Outlet, useNavigate } from "react-router-dom";
+import logo from '../assets/images/logo.svg';
 
 const { Header, Sider, Content } = Layout;
 
@@ -56,7 +57,8 @@ const AdminLayout = () => {
             background: '#fff',
             borderBottom: '1px solid #f0f0f0',
           }}>
-            <img src="/src/assets/images/logo.svg" alt="Logo" style={{ height: 35 }} />
+
+            <img src={logo} alt="Logo" style={{ height: 35}} />
           </div>
           <Menu
             mode="inline"
