@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Upload, message, Alert } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
-import { set } from 'idb-keyval';
+import { set, get } from 'idb-keyval';
 
 const { Dragger } = Upload;
 
@@ -52,21 +52,73 @@ const ImportStep: React.FC<ImportStepProps> = ({ title, templateColumns, templat
         await set(dbKey, json);
         // Tổng hợp theo đơn vị và vị trí
         if (dbKey === 'employees') {
-          const summary: { unit: string; position: string; count: number }[] = [];
-          const map = new Map<string, Map<string, number>>();
+          // Map unit -> position -> {quantity, salarySum, salaryCount}
+          const map = new Map<string, Map<string, { quantity: number; salarySum: number; salaryCount: number }>>();
           for (const row of json) {
             const unit = row.unit || '';
             const position = row.position || '';
+            const salary = row.salary ? Number(row.salary) : undefined;
             if (!unit || !position) continue;
             if (!map.has(unit)) map.set(unit, new Map());
             const posMap = map.get(unit)!;
-            posMap.set(position, (posMap.get(position) || 0) + 1);
-          }
-          for (const [unit, posMap] of map.entries()) {
-            for (const [position, count] of posMap.entries()) {
-              summary.push({ unit, position, count });
+            if (!posMap.has(position)) posMap.set(position, { quantity: 0, salarySum: 0, salaryCount: 0 });
+            const stat = posMap.get(position)!;
+            stat.quantity += 1;
+            if (salary !== undefined && !isNaN(salary)) {
+              stat.salarySum += salary;
+              stat.salaryCount += 1;
             }
           }
+          // Build summary
+          const summary = Array.from(map.entries()).map(([unit, posMap]) => ({
+            unit,
+            positions: Array.from(posMap.entries()).map(([position, stat]) => ({
+              position,
+              quantity: stat.quantity,
+              salary: stat.salaryCount > 0 ? Math.round(stat.salarySum / stat.salaryCount) : undefined,
+            })),
+          }));
+          
+          await set('employee_position_summary', summary);
+        }
+        if (dbKey === 'salaries') {
+          const employees = await get('employees') || [];
+          const salaryRows = json;
+          // Lấy summary hiện tại
+          const summary = (await get('employee_position_summary')) || [];
+          // Tạo map unit -> position -> {sum, count}
+          const salaryMap = new Map();
+          for (const row of salaryRows) {
+            const emp = employees.find((e: any) => e.code === row.code);
+            if (!emp) continue;
+            const unit = emp.unit;
+            const position = emp.position;
+            const salary = Number(row.salary);
+            if (!unit || !position || isNaN(salary)) continue;
+            const key = unit + '||' + position;
+            if (!salaryMap.has(key)) salaryMap.set(key, { sum: 0, count: 0 });
+            const stat = salaryMap.get(key);
+            stat.sum += salary;
+            stat.count += 1;
+          }
+          // Cập nhật summary
+          for (const group of summary) {
+            for (const pos of group.positions) {
+              const key = group.unit + '||' + pos.position;
+              if (salaryMap.has(key)) {
+                const stat = salaryMap.get(key);
+                // Nếu đã có salary, cộng dồn và tính lại trung bình
+                if (typeof pos.salary === 'number') {
+                  pos.salary = Math.round((pos.salary * pos.quantity + stat.sum) / (pos.quantity + stat.count));
+                  pos.quantity += stat.count;
+                } else {
+                  pos.salary = Math.round(stat.sum / stat.count);
+                  pos.quantity = stat.count;
+                }
+              }
+            }
+          }
+          console.log(summary);
           await set('employee_position_summary', summary);
         }
         setSaved(true);

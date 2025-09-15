@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
-import { Table, Button, InputNumber, DatePicker } from 'antd';
+import { Table, Button, InputNumber, DatePicker, Dropdown } from 'antd';
 import dayjs from 'dayjs';
+import UnitTree, { getAllTitlesByTitle, demoData } from '../components/UnitTree';
+import { get } from 'idb-keyval';
 
+// Khôi phục lại interface CostEstimateRow như cũ
 interface CostEstimateRow {
   key: number;
   employeeType: string;
   currentCount: number;
-  months: (number | undefined)[];
   avgSalary: number;
+  months: (number | undefined)[];
 }
 
 const initialRows: Omit<CostEstimateRow, 'months'>[] = [
@@ -34,16 +37,11 @@ const CostEstimate = () => {
   const [salaryAmount, setSalaryAmount] = useState<number | null>(null);
   const [month, setMonth] = useState<string>(`${nextYear}-04`);
   const monthLabels = getMonthLabels();
-  const [data, setData] = useState<CostEstimateRow[]>(
-    initialRows.map(row => ({
-      key: row.key,
-      employeeType: row.employeeType,
-      currentCount: row.currentCount,
-      months: monthLabels.map(() => undefined),
-      avgSalary: row.avgSalary,
-    }))
-  );
+  const [data, setData] = useState<CostEstimateRow[]>([]);
   const [showResult, setShowResult] = useState(false);
+  const [unit, setUnit] = useState('all');
+  const [unitDropdownOpen, setUnitDropdownOpen] = useState(false);
+  const [unitTitles, setUnitTitles] = useState<string[]>([]);
 
   // Xác định index các mốc tháng
   const idxSep2026 = monthLabels.findIndex(m => m === '09/2026');
@@ -144,6 +142,42 @@ const CostEstimate = () => {
   const totalAll = data.reduce((sum, row) => sum + row.months.reduce((a, b) => a + (b || 0), 0), 0);
   const totalCurrent = data.reduce((sum, row) => sum + (row.currentCount || 0), 0);
 
+  // Khi chọn đơn vị, load lại data từ employee_position_summary
+  React.useEffect(() => {
+    async function loadData() {
+      const summary = (await get('employee_position_summary')) || [];
+      let rows: CostEstimateRow[] = [];
+      if (unit === 'all') {
+        for (const group of summary) {
+          for (const pos of group.positions) {
+            rows.push({
+              key: `${group.unit}-${pos.position}`,
+              employeeType: pos.position,
+              currentCount: pos.quantity,
+              avgSalary: pos.salary || 0,
+              months: monthLabels.map(() => undefined),
+            });
+          }
+        }
+      } else {
+        const group = summary.find((g: any) => g.unit === unit);
+        if (group) {
+          for (const pos of group.positions) {
+            rows.push({
+              key: `${group.unit}-${pos.position}`,
+              employeeType: pos.position,
+              currentCount: pos.quantity,
+              avgSalary: pos.salary || 0,
+              months: monthLabels.map(() => undefined),
+            });
+          }
+        }
+      }
+      setData(rows);
+    }
+    loadData();
+  }, [unit, monthLabels]);
+
   const resultColumns = columns.map(col => {
     if (col.children) {
       // Cột tháng và tổng: render label
@@ -197,6 +231,25 @@ const CostEstimate = () => {
     return col;
   });
 
+  const handleApplyRaise = () => {
+    if ((!salaryPercent && !salaryAmount) || (!salaryPercent && salaryAmount === 0) || (!salaryAmount && salaryPercent === 0)) return;
+    // Xác định tháng bắt đầu
+    let startIdx = 0;
+    if (month) {
+      const idx = monthLabels.findIndex(m => m === dayjs(month, 'YYYY-MM').format('MM/YYYY'));
+      if (idx !== -1) startIdx = idx;
+    }
+    setData(prevData => prevData.map(row => {
+      // Tính lương mới
+      let newSalary = row.avgSalary;
+      if (salaryPercent) newSalary = Math.round(row.avgSalary * (1 + salaryPercent / 100));
+      if (salaryAmount) newSalary = row.avgSalary + salaryAmount;
+      // Fill vào months từ startIdx trở đi
+      const newMonths = row.months.map((val, idx) => idx >= startIdx ? newSalary : val);
+      return { ...row, months: newMonths };
+    }));
+  };
+
   return (
     <div style={{ background: '#fff', padding: 20, borderRadius: 8 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
@@ -206,6 +259,38 @@ const CostEstimate = () => {
         <Button type="text" icon={<i className="fa-light fa-arrow-left" />} style={{ color: '#1C90BD', background: '#F5F5F5', fontWeight: 600, fontSize: 16 }} onClick={() => window.history.back()}>
           Quay lại
         </Button>
+      </div>
+      {/* Dropdown chọn bộ phận */}
+      <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 16 }}>
+        <span style={{ fontWeight: 500, fontSize: 15, color: '#1C90BD' }}>Đơn vị:</span>
+        <Dropdown
+          open={unitDropdownOpen}
+          onOpenChange={setUnitDropdownOpen}
+          dropdownRender={() => (
+            <div style={{ maxHeight: 400, overflow: 'auto', minWidth: 260 }}>
+              <Button
+                type="text"
+                style={{ width: '100%', textAlign: 'left', color: '#1890ff', fontWeight: 500, fontSize: 14, padding: '4px 16px', borderRadius: 0, borderBottom: '1px solid #f0f0f0', marginBottom: 2, background: '#e6f7ff', transition: 'background 0.2s' }}
+                onMouseOver={e => (e.currentTarget.style.background = '#e6f7ff')}
+                onClick={() => { setUnit('all'); setUnitTitles([]); setUnitDropdownOpen(false); }}
+              >
+                Tất cả bộ phận
+              </Button>
+              <UnitTree
+                onSelect={title => {
+                  setUnit(title);
+                  setUnitTitles(title === 'all' ? [] : getAllTitlesByTitle(demoData, title));
+                  setUnitDropdownOpen(false);
+                }}
+                selectedKey={unit}
+              />
+            </div>
+          )}
+        >
+          <Button style={{ width: 180, textAlign: 'left' }}>
+            {unit === 'all' ? 'Tất cả bộ phận' : unit}
+          </Button>
+        </Dropdown>
       </div>
       {/* Trạng thái kế hoạch */}
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20, gap: 12, flexWrap: 'wrap' }}>
@@ -352,16 +437,8 @@ const CostEstimate = () => {
         </div>
         <Button
           type="primary"
-          style={{
-            fontWeight: 600,
-            height: 35,
-            background: '#1C90BD',
-            borderColor: '#1C90BD',
-            borderRadius: 6,
-            width: 120,
-            alignSelf: 'flex-end',
-            marginTop: 20
-          }}
+          style={{ fontWeight: 600, height: 35, background: '#1C90BD', borderColor: '#1C90BD', borderRadius: 6, width: 120, alignSelf: 'flex-end', marginTop: 20 }}
+          onClick={handleApplyRaise}
         >
           Áp dụng
         </Button>
