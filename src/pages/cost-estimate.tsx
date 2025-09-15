@@ -9,8 +9,10 @@ interface CostEstimateRow {
   key: number;
   employeeType: string;
   currentCount: number;
-  avgSalary: number;
+  raiseValue?: number;
+  raiseType?: 'percent' | 'amount';
   months: (number | undefined)[];
+  avgSalary: number;
 }
 
 const initialRows: Omit<CostEstimateRow, 'months'>[] = [
@@ -109,23 +111,50 @@ const CostEstimate = () => {
     );
   }
 
+  // Table 1 columns:
   const columns = [
     { title: 'STT', dataIndex: 'key', width: 50, align: 'center' as const, render: (_: any, __: any, i: number) => i + 1 },
-    { title: 'Phân loại nhân viên', dataIndex: 'employeeType', minWidth: 200, render: (value: string) => (
-      <span style={{ display: 'block' }}>{value}</span>
-    ) },
+    { title: 'Phân loại nhân viên', dataIndex: 'employeeType', minWidth: 200, render: (value: string) => <span style={{ display: 'block' }}>{value}</span> },
     {
       title: 'Số lượng',
       dataIndex: 'currentCount',
       minWidth: 80,
       align: 'center' as const,
-      render: (value: number) => (
-        <span style={{ display: 'block' }}>{value}</span>
+      render: (value: number) => <span style={{ display: 'block' }}>{value}</span>,
+    },
+    {
+      title: 'Tăng lương',
+      dataIndex: 'raise',
+      minWidth: 180,
+      align: 'center' as const,
+      render: (_: any, row: CostEstimateRow, rowIdx: number) => (
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'center' }}>
+          <InputNumber
+            min={0}
+            value={row.raiseValue}
+            style={{ width: 90 }}
+            onChange={val => {
+              const newData = [...data];
+              newData[rowIdx].raiseValue = val === null ? undefined : Number(val);
+              setData(newData);
+            }}
+
+          />
+          <select
+            value={row.raiseType || 'percent'}
+            style={{ width: 60, height: 32, borderRadius: 6, border: '1px solid #d9d9d9', fontSize: 14 }}
+            onChange={e => {
+              const newData = [...data];
+              newData[rowIdx].raiseType = e.target.value as 'percent' | 'amount';
+              setData(newData);
+            }}
+          >
+            <option value="percent">%</option>
+            <option value="amount">¥</option>
+          </select>
+        </div>
       ),
     },
-    { title: 'Lương trung bình', dataIndex: 'avgSalary', minWidth: 120, align: 'center' as const, render: (value: number) => (
-      <span>{value.toLocaleString()} đ</span>
-    ) },
     {
       title: 'Số lượng nhân viên',
       children: monthColumns,
@@ -154,8 +183,10 @@ const CostEstimate = () => {
               key: `${group.unit}-${pos.position}`,
               employeeType: pos.position,
               currentCount: pos.quantity,
-              avgSalary: pos.salary || 0,
+              raiseValue: undefined,
+              raiseType: 'percent',
               months: monthLabels.map(() => undefined),
+              avgSalary: pos.salary || 0,
             });
           }
         }
@@ -167,8 +198,10 @@ const CostEstimate = () => {
               key: `${group.unit}-${pos.position}`,
               employeeType: pos.position,
               currentCount: pos.quantity,
-              avgSalary: pos.salary || 0,
+              raiseValue: undefined,
+              raiseType: 'percent',
               months: monthLabels.map(() => undefined),
+              avgSalary: pos.salary || 0,
             });
           }
         }
@@ -178,58 +211,37 @@ const CostEstimate = () => {
     loadData();
   }, [unit, monthLabels]);
 
-  const resultColumns = columns.map(col => {
-    if (col.children) {
-      // Cột tháng và tổng: render label
-      return {
-        ...col,
-        children: col.children.map(child => ({
-          ...child,
-          render: (_: any, row: any, rowIdx: number) => {
-            if (child.dataIndex.startsWith('month_')) {
-              const idx = parseInt(child.dataIndex.replace('month_', ''));
-              return <span>{row.months[idx] ?? ''}</span>;
-            }
-            if (child.dataIndex === 'totalFirst') {
-              const sum = row.months.slice(0, idxSep2026 + 1).reduce((a: number, b: number) => a + (b || 0), 0);
-              return <span style={{ fontWeight: 600 }}>{sum}</span>;
-            }
-            if (child.dataIndex === 'totalLast') {
-              const sum = row.months.slice(idxSep2026 + 1, idxApr2027 + 1).reduce((a: number, b: number) => a + (b || 0), 0);
-              return <span style={{ fontWeight: 600 }}>{sum}</span>;
-            }
-            if (child.dataIndex === 'totalAll') {
-              const sum = row.months.reduce((a: number, b: number) => a + (b || 0), 0);
-              return <span style={{ fontWeight: 600, color: '#1C90BD' }}>{sum}</span>;
-            }
-            return '';
-          }
-        }))
-      };
-    }
-    // Cột tăng lương: render label
-    if (col.dataIndex === 'avgSalary') {
-      return {
-        ...col,
-        render: (value: number) => <span>{value.toLocaleString()} đ</span>
-      };
-    }
-    // Cột số lượng hiện tại: render label
-    if (col.dataIndex === 'currentCount') {
-      return {
-        ...col,
-        render: (value: number) => <span>{value}</span>
-      };
-    }
-    // Cột phân loại nhân viên: render label
-    if (col.dataIndex === 'employeeType') {
-      return {
-        ...col,
-        render: (value: string) => <span>{value}</span>
-      };
-    }
-    return col;
-  });
+  // Table 2 (bảng kết quả): columns giữ nguyên, nhưng các cột tháng chỉ render label, không render input
+  const resultColumns = [
+    { ...columns[0] },
+    { ...columns[1] },
+    { ...columns[2] },
+    {
+      title: 'Lương trung bình',
+      dataIndex: 'avgSalary',
+      minWidth: 120,
+      align: 'center' as const,
+      render: (_: any, row: CostEstimateRow) => {
+        let newSalary = row.avgSalary;
+        if (row.raiseType === 'percent' && row.raiseValue) newSalary = Math.round(row.avgSalary * (1 + row.raiseValue / 100));
+        else if (row.raiseType === 'amount' && row.raiseValue) newSalary = row.avgSalary + row.raiseValue;
+        return <span>{newSalary.toLocaleString()} đ</span>;
+      },
+    },
+    {
+      title: 'Số lượng nhân viên',
+      children: monthLabels.map((label, colIdx) => ({
+        title: label,
+        dataIndex: `month_${colIdx}`,
+        width: 110,
+        minWidth: 80,
+        align: 'center' as const,
+        render: (_: any, row: CostEstimateRow) => (
+          <span>{row.months[colIdx] ?? ''}</span>
+        ),
+      })),
+    },
+  ];
 
   const handleApplyRaise = () => {
     if ((!salaryPercent && !salaryAmount) || (!salaryPercent && salaryAmount === 0) || (!salaryAmount && salaryPercent === 0)) return;
