@@ -127,25 +127,29 @@ const CarList: React.FC = () => {
           <div style={{ fontSize: 28, fontWeight: 700, color: "#222" }}>
             Danh sách xe
           </div>
-          
         </div>
-        <Link to="/car/add">
-          <Button
-            type="primary"
-            style={{
-              borderRadius: 6,
-              fontWeight: 600,
-              fontSize: 16,
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              boxShadow: "0 2px 8px #f0f1f2",
-            }}
-            icon={<i className="fa-light fa-plus" style={{ fontSize: 18 }} />}
-          >
-            Thêm xe mới
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Button type="text" icon={<i className="fa-light fa-arrow-left" />} style={{ color: '#1C90BD', background: '#F5F5F5', fontWeight: 600, fontSize: 16 }} onClick={() => window.history.back()}>
+            Quay lại
           </Button>
-        </Link>
+          <Link to="/car/add">
+            <Button
+              type="primary"
+              style={{
+                borderRadius: 6,
+                fontWeight: 600,
+                fontSize: 16,
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                boxShadow: "0 2px 8px #f0f1f2",
+              }}
+              icon={<i className="fa-light fa-plus" style={{ fontSize: 18 }} />}
+            >
+              Thêm xe mới
+            </Button>
+          </Link>
+        </div>
       </div>
       <Space style={{ marginBottom: 16 }}>
         <Input

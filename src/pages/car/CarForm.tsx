@@ -22,37 +22,42 @@ const CarForm = ({ initialValues = {}, onSubmit, mode = 'add' }) => {
   }, [initialValues, form]);
 
   return (
-    <Form
-      form={form}
-      layout="vertical"
-      onFinish={onSubmit}
-      style={{ maxWidth: 400, margin: '0 auto' }}
-    >
-      <Form.Item name="name" label="Tên xe" rules={[{ required: true, message: 'Vui lòng nhập tên xe' }]}> 
-        <Input placeholder="Nhập tên xe" />
-      </Form.Item>
-      <Form.Item name="manufacturer" label="Hãng xe" rules={[{ required: true, message: 'Vui lòng chọn hãng xe' }]}> 
-        <Select placeholder="Chọn hãng xe">
-          {manufacturers.map(m => <Option key={m} value={m}>{m}</Option>)}
-        </Select>
-      </Form.Item>
-      <Form.Item name="age" label="Năm sản xuất" rules={[{ required: true, message: 'Vui lòng nhập năm' }]}> 
-        <Input type="number" placeholder="Nhập năm sản xuất" />
-      </Form.Item>
-      <Form.Item name="status" label="Trạng thái" rules={[{ required: true, message: 'Vui lòng chọn trạng thái' }]}> 
-        <Select placeholder="Chọn trạng thái">
-          {statusOptions.map(opt => <Option key={opt.value} value={opt.value}>{opt.label}</Option>)}
-        </Select>
-      </Form.Item>
-      <Form.Item name="description" label="Mô tả"> 
-        <Input.TextArea rows={3} placeholder="Nhập mô tả" />
-      </Form.Item>
-      <Form.Item>
-        <Button type="primary" htmlType="submit" block>
-          {mode === 'edit' ? 'Cập nhật xe' : 'Thêm xe mới'}
-        </Button>
-      </Form.Item>
-    </Form>
+    <>
+      <Button type="text" icon={<i className="fa-light fa-arrow-left" />} style={{ color: '#1C90BD', background: '#F5F5F5', fontWeight: 600, fontSize: 16, marginBottom: 16 }} onClick={() => window.history.back()}>
+        Quay lại
+      </Button>
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={onSubmit}
+        style={{ maxWidth: 400, margin: '0 auto' }}
+      >
+        <Form.Item name="name" label="Tên xe" rules={[{ required: true, message: 'Vui lòng nhập tên xe' }]}> 
+          <Input placeholder="Nhập tên xe" />
+        </Form.Item>
+        <Form.Item name="manufacturer" label="Hãng xe" rules={[{ required: true, message: 'Vui lòng chọn hãng xe' }]}> 
+          <Select placeholder="Chọn hãng xe">
+            {manufacturers.map(m => <Option key={m} value={m}>{m}</Option>)}
+          </Select>
+        </Form.Item>
+        <Form.Item name="age" label="Năm sản xuất" rules={[{ required: true, message: 'Vui lòng nhập năm' }]}> 
+          <Input type="number" placeholder="Nhập năm sản xuất" />
+        </Form.Item>
+        <Form.Item name="status" label="Trạng thái" rules={[{ required: true, message: 'Vui lòng chọn trạng thái' }]}> 
+          <Select placeholder="Chọn trạng thái">
+            {statusOptions.map(opt => <Option key={opt.value} value={opt.value}>{opt.label}</Option>)}
+          </Select>
+        </Form.Item>
+        <Form.Item name="description" label="Mô tả"> 
+          <Input.TextArea rows={3} placeholder="Nhập mô tả" />
+        </Form.Item>
+        <Form.Item>
+          <Button type="primary" htmlType="submit" block>
+            {mode === 'edit' ? 'Cập nhật xe' : 'Thêm xe mới'}
+          </Button>
+        </Form.Item>
+      </Form>
+    </>
   );
 };
 

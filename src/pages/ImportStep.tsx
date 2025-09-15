@@ -65,6 +65,11 @@ const ImportStep: React.FC<ImportStepProps> = ({ title, templateColumns, templat
 
   return (
     <div style={{ height: 160 }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+        <Button type="text" icon={<i className="fa-light fa-arrow-left" />} style={{ color: '#1C90BD', background: '#F5F5F5', fontWeight: 600, fontSize: 16 }} onClick={() => window.history.back()}>
+          Quay lại
+        </Button>
+      </div>
       <div style={{ fontSize: 18, fontWeight: 700, color: '#1C90BD', marginBottom: 16 }}>{title}</div>
       <Dragger
         name="file"
