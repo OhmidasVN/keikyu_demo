@@ -10,7 +10,8 @@ const AdminLayout = () => {
   const items = [
     { key: "import-data", icon: <i className="fa-light fa-up-from-bracket icon-color" />, label: "Import data" },
     { key: "employee", icon: <i className="fa-light fa-users icon-color" />, label: "Nhân viên" },
-    { key: "cost-estimate", icon: <i className="fa-light fa-display-chart-up-circle-dollar icon-color" />, label: "Dự toán chi phí" },
+    { key: "cost-estimate-sent", icon: <i className="fa-light fa-list-tree icon-color" />, label: "Dự toán đã gửi" },
+    { key: "cost-estimate", icon: <i className="fa-light fa-display-chart-up-circle-dollar icon-color" />, label: "Biểu mẫu dự toán" },
     { key: "account", icon: <i className="fa-light fa-user-plus icon-color"/>, label: "Tài khoản" },
   ];
 
@@ -21,22 +22,27 @@ const AdminLayout = () => {
     }
   };
 
-  const userMenu = (
-    <Menu onClick={handleMenuClick}>
-      <Menu.Item key="profile">
-        <i className="fa-light fa-user icon-color" style={{ marginRight: 8 }} />
-        Profile
-      </Menu.Item>
-      <Menu.Item key="change-password">
-        <i className="fa-light fa-key icon-color" style={{ marginRight: 8 }} />
-        Đổi mật khẩu
-      </Menu.Item>
-      <Menu.Item key="logout">
-        <i className="fa-light fa-arrow-right-from-bracket icon-color" style={{ marginRight: 8 }} />
-        Đăng xuất
-      </Menu.Item>
-    </Menu>
-  );
+  const userMenuItems = [
+    {
+      key: 'profile',
+      icon: <i className="fa-light fa-user icon-color" style={{ marginRight: 8 }} />,
+      label: 'Profile',
+    },
+    {
+      key: 'change-password',
+      icon: <i className="fa-light fa-key icon-color" style={{ marginRight: 8 }} />,
+      label: 'Đổi mật khẩu',
+    },
+    {
+      key: 'logout',
+      icon: <i className="fa-light fa-arrow-right-from-bracket icon-color" style={{ marginRight: 8 }} />,
+      label: 'Đăng xuất',
+    },
+  ];
+  const userMenuProps = {
+    items: userMenuItems,
+    onClick: handleMenuClick,
+  };
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -70,7 +76,7 @@ const AdminLayout = () => {
       </Sider>
       <Layout>
         <Header style={{ background: "#fff", display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
-          <Dropdown overlay={userMenu} trigger={['hover']} placement="bottomRight">
+          <Dropdown menu={userMenuProps} trigger={['hover']} placement="bottomRight">
             <div style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
               <span style={{ fontWeight: 500, color: '#222', fontSize: 15 }}>admin</span>
               <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: '50%', background: '#e6f4ff' }}>

@@ -10,6 +10,7 @@ import CarEdit from "./pages/car/CarEdit";
 import Account from "./pages/Account";
 import Employee from "./pages/Employee";
 import ImportData from "./pages/ImportData";
+import React from "react";
 
 function RequireAuth({ children }: { children: JSX.Element }) {
   const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
@@ -32,6 +33,11 @@ function App() {
         <Route path="/account" element={<Account />} />
         <Route path="/employee" element={<Employee />} />
         <Route path="/import-data" element={<ImportData />} />
+        <Route path="/cost-estimate-sent" element={
+          <React.Suspense fallback={<div>Loading...</div>}>
+            {React.createElement(React.lazy(() => import('./pages/cost-estimate-sent')))}
+          </React.Suspense>
+        } />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>

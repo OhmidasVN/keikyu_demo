@@ -23,17 +23,20 @@ const Employee = () => {
     });
   }, []);
 
-  const filteredData = dataSource.filter(row =>
-    row.username?.toLowerCase().includes(search.trim().toLowerCase()) &&
-    (unit === 'all' || unitTitles.includes(row.unit))
-  );
+  const filteredData = dataSource.filter(row => {
+    const searchText = search.trim().toLowerCase();
+    const match =
+      row.code?.toLowerCase().includes(searchText) ||
+      row.fullname?.toLowerCase().includes(searchText) ||
+      row.phone?.toLowerCase().includes(searchText);
+    return (!searchText || match) && (unit === 'all' || unitTitles.includes(row.unit));
+  });
   const pagedData = filteredData.slice((page - 1) * pageSize, page * pageSize);
 
   const columns = [
     { title: 'STT', dataIndex: 'key', width: 60, align: 'center' as const, render: (t: any, r: any, i: number) => i + 1 },
     { title: 'Mã nhân viên', dataIndex: 'code', width: 100, align: 'left' as const },
     { title: 'Họ tên', dataIndex: 'fullname', width: 140, align: 'left' as const },
-    { title: 'Username', dataIndex: 'username', width: 120, align: 'left' as const },
     { title: 'Đơn vị', dataIndex: 'unit', width: 180, align: 'left' as const },
     { title: 'Chức danh', dataIndex: 'position', width: 120, align: 'left' as const },
     { title: 'Ngày sinh', dataIndex: 'dob', width: 100, align: 'center' as const },
@@ -51,8 +54,8 @@ const Employee = () => {
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center', marginBottom: 16 }}>
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center', flexGrow: 1 }}>
           <Input
-            placeholder="Tìm theo username..."
-            style={{ width: 220 }}
+            placeholder="Tìm theo mã, tên hoặc số ĐT..."
+            style={{ width: 260 }}
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
