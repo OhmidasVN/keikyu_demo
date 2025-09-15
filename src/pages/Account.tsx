@@ -300,6 +300,28 @@ const Account = () => {
         okButtonProps={{ style: { background: '#1C90BD', borderColor: '#1C90BD', fontWeight: 500 } }}
       >
         <AntForm form={form} layout="vertical">
+          <AntForm.Item name="unit" label={<span style={{ fontSize: 13, fontWeight: 500 }}>Đơn vị</span>} rules={[{ required: true, message: 'Chọn đơn vị!' }]} style={{ marginBottom: 16 }}>
+            <Dropdown
+              open={unitDropdownOpenModal}
+              onOpenChange={setUnitDropdownOpenModal}
+              dropdownRender={() => (
+                <div style={{ maxHeight: 260, overflow: 'auto', minWidth: 220, borderRadius: 6, boxShadow: '0 2px 8px #eee', padding: 4 }}>
+                  <UnitTree
+                    onSelect={title => {
+                      setSelectedUnit(title);
+                      form.setFieldsValue({ unit: title });
+                      setUnitDropdownOpenModal(false);
+                    }}
+                    selectedKey={selectedUnit}
+                  />
+                </div>
+              )}
+            >
+              <Button style={{ width: '100%', textAlign: 'left', fontSize: 13, padding: '4px 10px', height: 32, borderRadius: 6 }}>
+                {selectedUnit || 'Chọn đơn vị'}
+              </Button>
+            </Dropdown>
+          </AntForm.Item>
           <AntForm.Item name="username" label="Username" rules={[{ required: true, message: 'Nhập username!' }]}> 
             <Input />
           </AntForm.Item>
@@ -331,38 +353,19 @@ const Account = () => {
               }
             />
           </AntForm.Item>
-          <AntForm.Item name="unit" label={<span style={{ fontSize: 13, fontWeight: 500 }}>Đơn vị</span>} rules={[{ required: true, message: 'Chọn đơn vị!' }]} style={{ marginBottom: 16 }}>
-            <Dropdown
-              open={unitDropdownOpenModal}
-              onOpenChange={setUnitDropdownOpenModal}
-              dropdownRender={() => (
-                <div style={{ maxHeight: 260, overflow: 'auto', minWidth: 220, borderRadius: 6, boxShadow: '0 2px 8px #eee', padding: 4 }}>
-                  <UnitTree
-                    onSelect={title => {
-                      setSelectedUnit(title);
-                      form.setFieldsValue({ unit: title });
-                      setUnitDropdownOpenModal(false);
-                    }}
-                    selectedKey={selectedUnit}
-                  />
-                </div>
-              )}
-            >
-              <Button style={{ width: '100%', textAlign: 'left', fontSize: 13, padding: '4px 10px', height: 32, borderRadius: 6 }}>
-                {selectedUnit || 'Chọn đơn vị'}
-              </Button>
-            </Dropdown>
-          </AntForm.Item>
-          <AntForm.Item name="phone" label="Số ĐT" rules={[{ required: true, message: 'Nhập số điện thoại!' }]}> 
-            <Input />
-          </AntForm.Item>
-          <AntForm.Item name="status" label="Trạng thái" rules={[{ required: true, message: 'Chọn trạng thái!' }]}> 
-            <Select>
-              <Select.Option value="active">Active</Select.Option>
-              <Select.Option value="inactive">Inactive</Select.Option>
-              <Select.Option value="locked">Khoá</Select.Option>
-            </Select>
-          </AntForm.Item>
+          {/* Số ĐT và Trạng thái cùng 1 dòng */}
+          <div style={{ display: 'flex', gap: 12 }}>
+            <AntForm.Item name="phone" label="Số ĐT" rules={[{ required: true, message: 'Nhập số điện thoại!' }]} style={{ flex: 1, marginBottom: 0 }}>
+              <Input />
+            </AntForm.Item>
+            <AntForm.Item name="status" label="Trạng thái" rules={[{ required: true, message: 'Chọn trạng thái!' }]} style={{ flex: 1, marginBottom: 0 }}>
+              <Select>
+                <Select.Option value="active">Active</Select.Option>
+                <Select.Option value="inactive">Inactive</Select.Option>
+                <Select.Option value="locked">Khoá</Select.Option>
+              </Select>
+            </AntForm.Item>
+          </div>
         </AntForm>
       </Modal>
     </div>
