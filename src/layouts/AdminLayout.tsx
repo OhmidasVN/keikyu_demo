@@ -8,10 +8,25 @@ const AdminLayout = () => {
   const navigate = useNavigate();
 
   const items = [
-    { key: "import-data", icon: <i className="fa-light fa-up-from-bracket icon-color" />, label: "Import data" },
-    { key: "employee", icon: <i className="fa-light fa-users icon-color" />, label: "Nhân viên" },
-    { key: "cost-estimate-sent", icon: <i className="fa-light fa-list-tree icon-color" />, label: "Dự toán đã gửi" },
-    { key: "cost-estimate", icon: <i className="fa-light fa-display-chart-up-circle-dollar icon-color" />, label: "Biểu mẫu dự toán" },
+    {
+      key: "import-data",
+      icon: <i className="fa-light fa-up-from-bracket icon-color" />, label: "Import data",
+      children: [
+        { key: "import-data", icon: <i className="fa-light fa-file-arrow-up icon-color" />, label: "Import" },
+        { key: "employee", icon: <i className="fa-light fa-users icon-color" />, label: "Nhân viên" },
+        { key: "update-data", icon: <i className="fa-light fa-arrows-rotate icon-color" />, label: "Cập nhật data" },
+      ]
+    },
+    { key: "master-data", icon: <i className="fa-light fa-database icon-color" />, label: "Master data" },
+    { key: "cost-estimate", icon: <i className="fa-light fa-money-check-pen icon-color" />, label: "Input" },
+    {
+      key: "report",
+      icon: <i className="fa-light fa-game-board icon-color" />,
+      label: "Output",
+      children: [
+        { key: "cost-estimate-sent", icon: <i className="fa-light fa-list-tree icon-color" />, label: "Dự toán đã gửi" },
+      ]
+    },
     { key: "account", icon: <i className="fa-light fa-user-plus icon-color"/>, label: "Tài khoản" },
   ];
 
